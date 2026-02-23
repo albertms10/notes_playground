@@ -123,6 +123,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.17.0"
+  music_notes:
+    dependency: "direct main"
+    description:
+      name: music_notes
+      sha256: "6deb2bbc6bb6490d3323d8782825bb43f168b147ff26d1795101a6578edfe665"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.24.0"
   path:
     dependency: transitive
     description:
