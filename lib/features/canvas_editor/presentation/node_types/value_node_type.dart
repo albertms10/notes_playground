@@ -46,4 +46,7 @@ class ValueNodeType<V, O> extends NodeTypeDefinition<V, O> {
       _ => text,
     },
   );
+
+  @override
+  V? parseValue(String text) => null;
 }

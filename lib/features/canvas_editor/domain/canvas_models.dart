@@ -5,7 +5,7 @@ class NodeData<T> {
   const NodeData({
     required this.id,
     required this.typeId,
-    required this.position,
+    this.position = Offset.zero,
     this.value,
   });
 

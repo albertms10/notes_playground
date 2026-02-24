@@ -5,6 +5,7 @@ import 'package:music_notes/music_notes.dart';
 import 'package:notes_playground/features/canvas_editor/domain/canvas_models.dart';
 import 'package:notes_playground/features/canvas_editor/domain/node_type_definition.dart';
 import 'package:notes_playground/features/canvas_editor/domain/node_type_registry.dart';
+import 'package:notes_playground/features/canvas_editor/graph_engine.dart';
 import 'package:notes_playground/features/canvas_editor/presentation/node_types/note_node_type.dart';
 import 'package:notes_playground/features/canvas_editor/presentation/node_types/transpose_node_type.dart';
 import 'package:notes_playground/features/canvas_editor/presentation/node_types/value_node_type.dart';
@@ -39,7 +40,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
   final Map<String, NodeData<dynamic>> _nodes = {};
   final List<ConnectionData> _connections = [];
   final Map<String, TextEditingController> _textControllers = {};
-  final Map<String, dynamic> _outputCache = {};
+  late final GraphEngine _graphEngine = .new(registry: _typeRegistry);
 
   DraftConnection? _draftConnection;
   String? _selectedConnectionId;
@@ -308,7 +309,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
     if (targetIndex >= 0 &&
         _connections[targetIndex].id != reconnectingConnectionId) {
       _connections.removeAt(targetIndex);
-      _outputCache.clear();
+      _graphEngine.clear();
     }
 
     // Allow multiple outgoing connections from the same node, so we do not
@@ -325,7 +326,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
           toNodeId: target.nodeId,
           toSlot: target.slot,
         );
-        _outputCache.clear();
+        _graphEngine.clear();
         return;
       }
     }
@@ -338,7 +339,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
         toSlot: target.slot,
       ),
     );
-    _outputCache.clear();
+    _graphEngine.clear();
   }
 
   void _startDraftFromOutput(String fromNodeId, Offset globalPosition) {
@@ -378,7 +379,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
         _connections.removeWhere(
           (connection) => connection.id == draft.reconnectingConnectionId,
         );
-        _outputCache.clear();
+        _graphEngine.clear();
       }
 
       _draftConnection = null;
@@ -409,62 +410,11 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
   }
 
   Map<String, dynamic> _buildOutputs() {
-    // Use a persistent cache to avoid recomputing unchanged nodes.
-    final cache = _outputCache;
-    final stack = <String>{};
-
-    T? solve<T>(String nodeId) {
-      if (cache.containsKey(nodeId)) return cache[nodeId] as T?;
-      if (stack.contains(nodeId)) {
-        throw Exception('Unsupported cycle detected at node $nodeId');
-      }
-
-      final node = _nodes[nodeId];
-      if (node == null) return null;
-
-      stack.add(nodeId);
-      final incoming =
-          _connections
-              .where((connection) => connection.toNodeId == nodeId)
-              .toList()
-            ..sort((a, b) => a.toSlot.compareTo(b.toSlot));
-
-      final inputValues = incoming
-          .map((connection) => solve<T>(connection.fromNodeId))
-          .toList();
-
-      final output = _typeForNode<dynamic, dynamic>(
-        node,
-      ).computeOutput(node, inputValues);
-
-      cache[nodeId] = output;
-      stack.remove(nodeId);
-
-      return output as T;
-    }
-
-    for (final node in _nodes.values) {
-      solve<dynamic>(node.id);
-    }
-
-    return cache;
+    return _graphEngine.computeOutputs(_nodes, _connections);
   }
 
   void _invalidateCacheFor(String nodeId) {
-    // Remove the given node and all downstream nodes that depend on it.
-    final toRemove = <String>{};
-    final queue = <String>[nodeId];
-    while (queue.isNotEmpty) {
-      final current = queue.removeLast();
-      if (!toRemove.add(current)) continue;
-      for (final connection in _connections) {
-        if (connection.fromNodeId == current) {
-          queue.add(connection.toNodeId);
-        }
-      }
-    }
-
-    toRemove.forEach(_outputCache.remove);
+    _graphEngine.invalidateFrom(nodeId, _connections);
   }
 
   @override
