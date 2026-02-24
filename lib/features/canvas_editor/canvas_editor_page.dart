@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart' hide Interval;
 import 'package:music_notes/music_notes.dart';
+import 'package:notes_playground/features/canvas_editor/connection_manager.dart';
 import 'package:notes_playground/features/canvas_editor/domain/canvas_models.dart';
 import 'package:notes_playground/features/canvas_editor/domain/node_type_definition.dart';
 import 'package:notes_playground/features/canvas_editor/domain/node_type_registry.dart';
@@ -11,6 +12,8 @@ import 'package:notes_playground/features/canvas_editor/presentation/node_types/
 import 'package:notes_playground/features/canvas_editor/presentation/node_types/value_node_type.dart';
 import 'package:notes_playground/features/canvas_editor/presentation/painters/connections_painter.dart';
 import 'package:notes_playground/features/canvas_editor/presentation/widgets/canvas_node_card.dart';
+import 'package:notes_playground/features/canvas_editor/utils/connection_path.dart';
+import 'package:notes_playground/features/canvas_editor/utils/graph_utils.dart';
 import 'package:uuid/uuid.dart';
 
 @immutable
@@ -41,6 +44,9 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
   final List<ConnectionData> _connections = [];
   final Map<String, TextEditingController> _textControllers = {};
   late final GraphEngine _graphEngine = .new(registry: _typeRegistry);
+  late final ConnectionManager _connectionManager = ConnectionManager(
+    _connections,
+  );
 
   DraftConnection? _draftConnection;
   String? _selectedConnectionId;
@@ -187,43 +193,17 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
     return MatrixUtils.transformPoint(inverse, local);
   }
 
-  Path _buildPath(Offset from, Offset to) {
-    final dx = (to.dx - from.dx).abs();
-    final curvature = 40 + dx * 0.42;
-    final c1 = from + Offset(curvature, 0);
-    final c2 = to - Offset(curvature, 0);
-
-    return Path()
-      ..moveTo(from.dx, from.dy)
-      ..cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, to.dx, to.dy);
-  }
-
-  bool _pointNearPath(Path path, Offset point, {required double tolerance}) {
-    final metrics = path.computeMetrics();
-    for (final metric in metrics) {
-      final length = metric.length;
-      const step = 8.0;
-      for (double distance = 0; distance <= length; distance += step) {
-        final tangent = metric.getTangentForOffset(distance);
-        if (tangent == null) continue;
-        if ((tangent.position - point).distance <= tolerance) return true;
-      }
-    }
-
-    return false;
-  }
-
   String? _connectionAt(Offset worldPosition) {
     for (final connection in _connections.reversed) {
       if (_draftConnection?.reconnectingConnectionId == connection.id) {
         continue;
       }
 
-      final path = _buildPath(
+      final path = buildPath(
         _outputPosition(connection.fromNodeId),
         _inputPosition(connection.toNodeId, connection.toSlot),
       );
-      if (_pointNearPath(path, worldPosition, tolerance: 10)) {
+      if (pointNearPath(path, worldPosition, tolerance: 10)) {
         return connection.id;
       }
     }
@@ -268,77 +248,27 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
     final targetType = _typeForNode<dynamic, dynamic>(targetNode);
     if (!targetType.acceptsInputConnections) return false;
 
-    if (_wouldCreateCycle(fromNodeId, target.nodeId)) return false;
+    if (wouldCreateCycle(_connections, fromNodeId, target.nodeId)) return false;
 
     return true;
   }
 
-  bool _wouldCreateCycle(String fromNodeId, String toNodeId) {
-    final next = <String, List<String>>{};
-    for (final connection in _connections) {
-      if (_draftConnection?.reconnectingConnectionId == connection.id) {
-        continue;
-      }
-      next
-          .putIfAbsent(connection.fromNodeId, () => [])
-          .add(connection.toNodeId);
-    }
-
-    final visited = <String>{};
-    final stack = <String>[toNodeId];
-    while (stack.isNotEmpty) {
-      final nodeId = stack.removeLast();
-      if (!visited.add(nodeId)) continue;
-      if (nodeId == fromNodeId) return true;
-      stack.addAll(next[nodeId] ?? const []);
-    }
-
-    return false;
-  }
 
   void _applyConnection({
     required String fromNodeId,
     required InputHit target,
     String? reconnectingConnectionId,
   }) {
-    final targetIndex = _connections.indexWhere(
-      (connection) =>
-          connection.toNodeId == target.nodeId &&
-          connection.toSlot == target.slot,
+    _connectionManager.applyConnection(
+      fromNodeId: fromNodeId,
+      target: target,
+      reconnectingConnectionId: reconnectingConnectionId,
+      idGenerator: () => _uuid.v4(),
     );
-    if (targetIndex >= 0 &&
-        _connections[targetIndex].id != reconnectingConnectionId) {
-      _connections.removeAt(targetIndex);
-      _graphEngine.clear();
-    }
-
-    // Allow multiple outgoing connections from the same node, so we do not
-    // remove existing outgoing connections here. Each input slot still only
-    // accepts a single incoming connection (handled above by removing the
-    // targetIndex entry), but a node's output may feed multiple inputs.
-
-    if (reconnectingConnectionId != null) {
-      final reconnectIndex = _connections.indexWhere(
-        (connection) => connection.id == reconnectingConnectionId,
-      );
-      if (reconnectIndex >= 0) {
-        _connections[reconnectIndex] = _connections[reconnectIndex].copyWith(
-          toNodeId: target.nodeId,
-          toSlot: target.slot,
-        );
-        _graphEngine.clear();
-        return;
-      }
-    }
-
-    _connections.add(
-      ConnectionData(
-        id: _uuid.v4(),
-        fromNodeId: fromNodeId,
-        toNodeId: target.nodeId,
-        toSlot: target.slot,
-      ),
-    );
+    // Reflect manager changes into the page state and clear cached outputs.
+    _connections
+      ..clear()
+      ..addAll(_connectionManager.connections);
     _graphEngine.clear();
   }
 
@@ -376,9 +306,10 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
           reconnectingConnectionId: draft.reconnectingConnectionId,
         );
       } else if (draft.reconnectingConnectionId != null) {
-        _connections.removeWhere(
-          (connection) => connection.id == draft.reconnectingConnectionId,
-        );
+        _connectionManager.removeById(draft.reconnectingConnectionId!);
+        _connections
+          ..clear()
+          ..addAll(_connectionManager.connections);
         _graphEngine.clear();
       }
 
@@ -511,7 +442,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
                           draftConnection: draft,
                           outputPositionOf: _outputPosition,
                           inputPositionOf: _inputPosition,
-                          buildPath: _buildPath,
+                          buildPath: buildPath,
                           hoveredInput: hoveredInput,
                           validDrop:
                               draft != null &&
