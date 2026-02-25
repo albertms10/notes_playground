@@ -12,8 +12,7 @@ dependencies:
     sdk: flutter
   music_notes:
     git:
-      url: git@github.com:albertms10/music_notes.git
-      ref: 0d05087d6bb2d6381274cac50f38850a5a81ae54
+      url: https://github.com/albertms10/music_notes
   uuid: ^4.5.2
 
 dev_dependencies:

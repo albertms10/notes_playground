@@ -150,9 +150,9 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "0d05087d6bb2d6381274cac50f38850a5a81ae54"
+      ref: HEAD
       resolved-ref: "0d05087d6bb2d6381274cac50f38850a5a81ae54"
-      url: "git@github.com:albertms10/music_notes.git"
+      url: "https://github.com/albertms10/music_notes"
     source: git
     version: "0.24.0"
   path:
