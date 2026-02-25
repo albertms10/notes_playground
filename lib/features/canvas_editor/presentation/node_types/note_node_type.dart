@@ -27,14 +27,10 @@ class NoteNodeType extends NodeTypeDefinition<Note, Note> {
   int inputSlots(String nodeId, List<ConnectionData> connections) => 0;
 
   @override
-  double nodeHeight(String nodeId, List<ConnectionData> connections) => 156;
+  Note? output(NodeData<Note> node, List<dynamic> inputValues) => node.value;
 
   @override
-  Note? computeOutput(NodeData<Note> node, List<dynamic> inputValues) =>
-      node.value;
-
-  @override
-  Widget buildEditor({
+  Widget builder({
     required TextEditingController controller,
     required ValueChanged<String> onChanged,
     Note? output,

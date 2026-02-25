@@ -27,16 +27,13 @@ class TransposeNodeType extends NodeTypeDefinition<Interval, Note> {
   int inputSlots(String nodeId, List<ConnectionData> connections) => 1;
 
   @override
-  double nodeHeight(String nodeId, List<ConnectionData> connections) => 156;
-
-  @override
-  Note? computeOutput(NodeData<Interval> node, List<dynamic> inputValues) =>
+  Note? output(NodeData<Interval> node, List<dynamic> inputValues) =>
       node.value != null
       ? (inputValues.singleOrNull as Note?)?.transposeBy(node.value!)
       : null;
 
   @override
-  Widget buildEditor({
+  Widget builder({
     required TextEditingController controller,
     required ValueChanged<String> onChanged,
     Note? output,

@@ -8,7 +8,7 @@ class GraphEngine {
 
   final Map<String, dynamic> _cache = {};
 
-  Map<String, dynamic> computeOutputs(
+  Map<String, dynamic> outputs(
     Map<String, NodeData<dynamic>> nodes,
     List<ConnectionData> connections,
   ) {
@@ -30,9 +30,7 @@ class GraphEngine {
 
       final inputValues = incoming.map((c) => solve<T>(c.fromNodeId)).toList();
 
-      final output = registry
-          .byId(node.typeId)
-          .computeOutput(node, inputValues);
+      final output = registry.byId(node.typeId).output(node, inputValues);
 
       cache[nodeId] = output;
       stack.remove(nodeId);

@@ -27,14 +27,11 @@ class ValueNodeType<V, O> extends NodeTypeDefinition<V, O> {
   int inputSlots(String nodeId, List<ConnectionData> connections) => 1;
 
   @override
-  double nodeHeight(String nodeId, List<ConnectionData> connections) => 156;
-
-  @override
-  O? computeOutput(NodeData<V> node, List<dynamic> inputValues) =>
+  O? output(NodeData<V> node, List<dynamic> inputValues) =>
       inputValues.singleOrNull as O?;
 
   @override
-  Widget buildEditor({
+  Widget builder({
     required TextEditingController controller,
     required ValueChanged<String> onChanged,
     O? output,

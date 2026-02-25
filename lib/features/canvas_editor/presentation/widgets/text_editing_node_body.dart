@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:music_notes/music_notes.dart';
 
 @immutable
 class TextEditingNodeBody extends StatefulWidget {

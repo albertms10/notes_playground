@@ -45,7 +45,7 @@ void main() {
     ];
 
     expect(
-      () => engine.computeOutputs(nodes, connections),
+      () => engine.outputs(nodes, connections),
       throwsA(isA<Exception>()),
     );
   });
@@ -86,7 +86,7 @@ void main() {
       ),
     ];
 
-    final outputs = engine.computeOutputs(nodes, connections);
+    final outputs = engine.outputs(nodes, connections);
 
     expect(outputs['n1'], equals(note.value));
     expect(outputs['t1'], isA<Note>());
@@ -118,14 +118,14 @@ void main() {
       ),
     ];
 
-    engine.computeOutputs(nodes, connections);
-    expect(engine.computeOutputs(nodes, connections), isNotEmpty);
+    engine.outputs(nodes, connections);
+    expect(engine.outputs(nodes, connections), isNotEmpty);
 
     engine.invalidateFrom('n1', connections);
     // After invalidation the engine should recompute; internal cache should be
     // empty but computeOutputs will fill it again; just assert cache used
     // behavior via API.
-    final after = engine.computeOutputs(nodes, connections);
+    final after = engine.outputs(nodes, connections);
     expect(after.containsKey('t1'), isTrue);
   });
 }

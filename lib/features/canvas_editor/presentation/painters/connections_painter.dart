@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:notes_playground/features/canvas_editor/domain/canvas_models.dart';
 
-typedef OutputPositionResolver = Offset Function(String nodeId);
-typedef InputPositionResolver = Offset Function(String nodeId, int slot);
-typedef PathBuilder = Path Function(Offset from, Offset to);
-
 @immutable
 class ConnectionsPainter extends CustomPainter {
   const ConnectionsPainter({
@@ -23,9 +19,9 @@ class ConnectionsPainter extends CustomPainter {
   final List<ConnectionData> connections;
   final String? selectedConnectionId;
   final DraftConnection? draftConnection;
-  final OutputPositionResolver outputPositionOf;
-  final InputPositionResolver inputPositionOf;
-  final PathBuilder buildPath;
+  final Offset Function(String nodeId) outputPositionOf;
+  final Offset Function(String nodeId, int slot) inputPositionOf;
+  final Path Function(Offset from, Offset to) buildPath;
   final InputHit? hoveredInput;
   final bool validDrop;
 

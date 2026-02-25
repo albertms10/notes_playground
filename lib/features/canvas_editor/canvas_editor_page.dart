@@ -156,9 +156,8 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
       ..setTranslationRaw(tx, ty, 0);
   }
 
-  double _nodeHeight(String nodeId) => _typeForNodeId<dynamic, dynamic>(
-    nodeId,
-  ).nodeHeight(nodeId, _connections);
+  double _nodeHeight(String nodeId) =>
+      _typeForNodeId<dynamic, dynamic>(nodeId).nodeHeight;
 
   int _inputSlots(String nodeId) => _typeForNodeId<dynamic, dynamic>(
     nodeId,
@@ -253,7 +252,6 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
     return true;
   }
 
-
   void _applyConnection({
     required String fromNodeId,
     required InputHit target,
@@ -323,12 +321,11 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
   void _addNodeAt(Offset worldPosition) {
     final type = _typeRegistry.cycle(_nodes.length);
     final nodeId = _uuid.v4();
-    final height = type.nodeHeight(nodeId, _connections);
 
     final node = NodeData(
       id: nodeId,
       typeId: type.typeId,
-      position: worldPosition - Offset(_nodeWidth / 2, height / 2),
+      position: worldPosition - Offset(_nodeWidth / 2, type.nodeHeight / 2),
       value: type.defaultValue,
     );
 
@@ -340,17 +337,9 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
     });
   }
 
-  Map<String, dynamic> _buildOutputs() {
-    return _graphEngine.computeOutputs(_nodes, _connections);
-  }
-
-  void _invalidateCacheFor(String nodeId) {
-    _graphEngine.invalidateFrom(nodeId, _connections);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final outputs = _buildOutputs();
+    final outputs = _graphEngine.outputs(_nodes, _connections);
     final draft = _draftConnection;
     final hoveredInput = draft == null ? null : _inputHitAt(draft.cursorWorld);
 
@@ -460,7 +449,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
                         nodeType: nodeType,
                         height: _nodeHeight(node.id),
                         width: _nodeWidth,
-                        editor: nodeType.buildEditor(
+                        editor: nodeType.builder(
                           output: outputs[node.id],
                           controller: controller,
                           onChanged: (value) => setState(() {
@@ -468,7 +457,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
                             _nodes[node.id] = _nodes[node.id]!.copyWith(
                               value: parsed ?? value,
                             );
-                            _invalidateCacheFor(node.id);
+                            _graphEngine.invalidateFrom(node.id, _connections);
                           }),
                         ),
                         inputSlots: _inputSlots(node.id),

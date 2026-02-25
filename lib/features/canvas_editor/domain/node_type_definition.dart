@@ -11,11 +11,11 @@ abstract class NodeTypeDefinition<V, O> {
 
   int inputSlots(String nodeId, List<ConnectionData> connections);
 
-  double nodeHeight(String nodeId, List<ConnectionData> connections);
+  double get nodeHeight => 156;
 
-  O? computeOutput(NodeData<V> node, List<dynamic> inputValues);
+  O? output(NodeData<V> node, List<dynamic> inputValues);
 
-  Widget buildEditor({
+  Widget builder({
     required TextEditingController controller,
     required ValueChanged<String> onChanged,
     O? output,
