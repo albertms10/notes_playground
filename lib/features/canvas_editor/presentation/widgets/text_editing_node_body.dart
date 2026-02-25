@@ -131,13 +131,3 @@ class _TextEditingNodeBodyState extends State<TextEditingNodeBody> {
     );
   }
 }
-
-extension StringParserChain<V> on List<StringParser<V>> {
-  /// Parses [source] from this chain of [StringParser]s.
-  bool match(String source) {
-    for (final parser in this) {
-      if (parser.matches(source)) return true;
-    }
-    return false;
-  }
-}

@@ -25,5 +25,5 @@ abstract class NodeTypeDefinition<V, O> {
   ///
   /// Default implementation returns `null` which signals the caller to
   /// store the raw string if no typed parsing is available.
-  V? parseValue(String text) => null;
+  V parseValue(String text);
 }
