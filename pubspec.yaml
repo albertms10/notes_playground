@@ -10,7 +10,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  music_notes: ^0.24.0
+  music_notes:
+    git:
+      url: git@github.com:albertms10/music_notes.git
+      ref: 0d05087d6bb2d6381274cac50f38850a5a81ae54
   uuid: ^4.5.2
 
 dev_dependencies:
