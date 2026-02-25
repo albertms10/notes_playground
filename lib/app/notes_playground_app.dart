@@ -8,7 +8,7 @@ class NotesPlaygroundApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Infinite Functional Canvas',
+      title: 'Notes playground',
       theme: ThemeData(
         colorScheme: .fromSeed(seedColor: const Color(0xFF4C8A7F)),
         scaffoldBackgroundColor: const Color(0xFFF5F7F6),
