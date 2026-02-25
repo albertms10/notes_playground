@@ -12,7 +12,7 @@ void main() {
         home: Scaffold(
           body: TextEditingNodeBody(
             controller: TextEditingController(text: 'A'),
-            parser: (s) => const EnglishNoteNotation(),
+            parser: (s) => const [EnglishNoteNotation()].firstMatchingParser(s),
           ),
         ),
       ),
@@ -36,7 +36,7 @@ void main() {
     );
 
     // Enter valid text
-    await tester.enterText(find.byType(TextField), 'C#');
+    await tester.enterText(find.byType(TextField), 'c');
     await tester.pumpAndSettle();
 
     final validDecoration = tester
