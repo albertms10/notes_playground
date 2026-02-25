@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 class TextEditingNodeBody extends StatefulWidget {
   const TextEditingNodeBody({
     required this.controller,
-    required this.onChanged,
     required this.displayText,
     required this.validateText,
+    this.onChanged,
     super.key,
   });
 
   final TextEditingController controller;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onChanged;
   final String Function(String) displayText;
   final bool Function(String) validateText;
 
@@ -28,7 +28,7 @@ class _TextEditingNodeBodyState extends State<TextEditingNodeBody> {
     if (widget.validateText(value)) {
       // Ensure the parent receives the final value so data-level handlers
       // (like cache invalidation) run.
-      widget.onChanged(value);
+      widget.onChanged?.call(value);
       setState(() {
         _isEditing = false;
       });

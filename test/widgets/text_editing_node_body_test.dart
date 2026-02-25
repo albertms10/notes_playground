@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print - test code
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notes_playground/features/canvas_editor/presentation/widgets/text_editing_node_body.dart';
@@ -8,18 +6,11 @@ void main() {
   testWidgets('shows red border for invalid input and blue for valid', (
     tester,
   ) async {
-    final controller = TextEditingController(text: 'A');
-    var last = controller.text;
-
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: TextEditingNodeBody(
-            controller: controller,
-            onChanged: (v) {
-              last = v;
-              print(last);
-            },
+            controller: TextEditingController(text: 'A'),
             displayText: (s) => s,
             validateText: (s) => s == 'OK',
           ),
