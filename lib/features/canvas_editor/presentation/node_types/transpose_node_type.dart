@@ -43,9 +43,7 @@ class TransposeNodeType extends NodeTypeDefinition<Interval, Note> {
     parser: parser,
   );
 
-
   @override
   StringParser<Interval>? parser(String text) =>
       Interval.parsers.firstMatchingParser(text);
-
 }
