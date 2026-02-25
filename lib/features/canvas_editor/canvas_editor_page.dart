@@ -453,7 +453,7 @@ class _CanvasEditorPageState extends State<CanvasEditorPage> {
                           output: outputs[node.id],
                           controller: controller,
                           onChanged: (value) => setState(() {
-                            final parsed = nodeType.parseValue(value);
+                            final parsed = nodeType.parser(value)!.parse(value);
                             _nodes[node.id] = _nodes[node.id]!.copyWith(
                               value: parsed ?? value,
                             );

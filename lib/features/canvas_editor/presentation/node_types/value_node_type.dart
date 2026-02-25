@@ -45,7 +45,7 @@ class ValueNodeType<V, O> extends NodeTypeDefinition<V, O> {
   );
 
   @override
-  V parseValue(String text) => throw UnimplementedError(
+  StringParser<V>? parser(String text) => throw UnimplementedError(
     'Parsing not implemented for generic ValueNodeType.',
   );
 }

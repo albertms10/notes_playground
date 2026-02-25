@@ -40,10 +40,12 @@ class TransposeNodeType extends NodeTypeDefinition<Interval, Note> {
   }) => TextEditingNodeBody(
     controller: controller,
     onChanged: onChanged,
-    validateText: (value) => Interval.parsers.matches(value),
-    displayText: (text) => parseValue(text).toString(),
+    parser: parser,
   );
 
+
   @override
-  Interval parseValue(String text) => Interval.parse(text);
+  StringParser<Interval>? parser(String text) =>
+      Interval.parsers.firstMatchingParser(text);
+
 }

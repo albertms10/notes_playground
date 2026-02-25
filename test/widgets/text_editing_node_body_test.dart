@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_notes/music_notes.dart';
 import 'package:notes_playground/features/canvas_editor/presentation/widgets/text_editing_node_body.dart';
 
 void main() {
@@ -11,8 +12,7 @@ void main() {
         home: Scaffold(
           body: TextEditingNodeBody(
             controller: TextEditingController(text: 'A'),
-            displayText: (s) => s,
-            validateText: (s) => s == 'OK',
+            parser: (s) => const EnglishNoteNotation(),
           ),
         ),
       ),
@@ -36,7 +36,7 @@ void main() {
     );
 
     // Enter valid text
-    await tester.enterText(find.byType(TextField), 'OK');
+    await tester.enterText(find.byType(TextField), 'C#');
     await tester.pumpAndSettle();
 
     final validDecoration = tester

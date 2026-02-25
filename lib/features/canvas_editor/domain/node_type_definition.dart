@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music_notes/music_notes.dart';
 import 'package:notes_playground/features/canvas_editor/domain/canvas_models.dart';
 
 @immutable
@@ -21,9 +22,6 @@ abstract class NodeTypeDefinition<V, O> {
     O? output,
   });
 
-  /// Attempts to parse a value of type [V] from [text].
-  ///
-  /// Default implementation returns `null` which signals the caller to
-  /// store the raw string if no typed parsing is available.
-  V parseValue(String text);
+  /// Returns the [StringParser] for a given [text], or null if not available.
+  StringParser<V>? parser(String text);
 }

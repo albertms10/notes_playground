@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:music_notes/music_notes.dart';
 
 @immutable
-class TextEditingNodeBody extends StatefulWidget {
+class TextEditingNodeBody<T> extends StatefulWidget {
   const TextEditingNodeBody({
     required this.controller,
-    required this.displayText,
-    required this.validateText,
+    required this.parser,
+    this.displayText,
     this.onChanged,
     super.key,
   });
 
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
-  final String Function(String) displayText;
-  final bool Function(String) validateText;
+  final StringParser<T>? Function(String) parser;
+  final String Function(T value)? displayText;
 
   @override
-  State<TextEditingNodeBody> createState() => _TextEditingNodeBodyState();
+  State<TextEditingNodeBody<T>> createState() => _TextEditingNodeBodyState<T>();
 }
 
-class _TextEditingNodeBodyState extends State<TextEditingNodeBody> {
+class _TextEditingNodeBodyState<T> extends State<TextEditingNodeBody<T>> {
   bool _isEditing = false;
   late final FocusNode _focusNode;
   bool _isValid = true;
 
+  String _format(String text) {
+    final parsedValue = widget.parser(text)!.parse(text);
+
+    return widget.displayText?.call(parsedValue) ?? parsedValue.toString();
+  }
+
   void _onSubmitted(String value) {
-    if (widget.validateText(value)) {
+    if (widget.parser(value) != null) {
       // Ensure the parent receives the final value so data-level handlers
       // (like cache invalidation) run.
       widget.onChanged?.call(value);
@@ -36,7 +43,7 @@ class _TextEditingNodeBodyState extends State<TextEditingNodeBody> {
   }
 
   void _onChanged(String value) {
-    final valid = widget.validateText(value);
+    final valid = widget.parser(value) != null;
     if (valid != _isValid) {
       setState(() {
         _isValid = valid;
@@ -48,7 +55,7 @@ class _TextEditingNodeBodyState extends State<TextEditingNodeBody> {
   void initState() {
     super.initState();
     _focusNode = .new();
-    _isValid = widget.validateText(widget.controller.text);
+    _isValid = widget.parser(widget.controller.text) != null;
   }
 
   @override
@@ -119,7 +126,7 @@ class _TextEditingNodeBodyState extends State<TextEditingNodeBody> {
                         right: 8,
                       ),
                       child: Text(
-                        widget.displayText(widget.controller.text),
+                        _format(widget.controller.text),
                         style: textStyle,
                       ),
                     ),

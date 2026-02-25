@@ -37,10 +37,10 @@ class NoteNodeType extends NodeTypeDefinition<Note, Note> {
   }) => TextEditingNodeBody(
     controller: controller,
     onChanged: onChanged,
-    validateText: (value) => Note.parsers.matches(value),
-    displayText: (text) => parseValue(text).toString(),
+    parser: parser,
   );
 
   @override
-  Note parseValue(String text) => Note.parse(text);
+  StringParser<Note>? parser(String text) =>
+      Note.parsers.firstMatchingParser(text);
 }
